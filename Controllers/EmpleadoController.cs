@@ -78,6 +78,7 @@ namespace EXAMCRUDNETCORE.Controllers
 
             return Json(cargos);
         }
+        // hola mundo
 
 
     }
