@@ -1,0 +1,212 @@
+﻿@model List<EXAMCRUDNETCORE.Models.Empleado>
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Lista de Empleados</h1>
+
+<div class="card">
+    <div class="card-header">
+        <H5>Lista de empleados</H5>
+    </div>
+    <div class="card-body">
+
+        <!--<a class="btn btn-success btn-sm" asp-action="Empleado_Detalle" asp-controller="Home" asp-route-idEmpleado="0"> Crear Nuevo </a> -->
+        <button class="btn btn-success btn-sm" onclick="abrirModal(0)">Crear Nuevo</button>
+        <hr />
+
+        <table id="ListaTableEmpleados" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Nombres</th>
+                    <th>Apellidos</th>
+                    <th>Correo</th>
+                    <th>Teléfono</th>
+                    <th>Cargo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Aquí se insertarán las filas con los datos -->
+            </tbody>
+        </table>
+
+        <!-- Botón para abrir el modal -->
+
+
+        <!-- Modal para crear o editar empleado -->
+        <div class="modal fade" id="empleadoModal" tabindex="-1" aria-labelledby="empleadoModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="empleadoModalLabel">Empleado</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="empleadoForm">
+                            <input type="hidden" id="idEmpleado" name="idEmpleado" />
+                            <div class="mb-3">
+                                <label for="nombres" class="form-label">Nombres</label>
+                                <input type="text" class="form-control" id="nombres" name="nombres" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="apellidos" class="form-label">Apellidos</label>
+                                <input type="text" class="form-control" id="apellidos" name="apellidos" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="correo" class="form-label">Correo</label>
+                                <input type="email" class="form-control" id="correo" name="correo" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="telefono" name="telefono" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="cargo" class="form-label">Cargo</label>
+                                <select class="form-select" id="cargo" name="cargo">
+                                    <!-- Aquí se llenarán los cargos disponibles -->
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-primary" onclick="guardarEmpleado()">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>
+</div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" ></script>
+<script>
+
+    $(document).ready(function () {
+        //alert("hola")
+        $.ajax({
+            url: '/Empleado/Listar',  // Ruta al método Listar en el controlador
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                // Limpiar la tabla antes de agregar filas
+                $("#ListaTableEmpleados tbody").empty();
+
+                // Recorrer los datos recibidos y agregar filas a la tabla
+                $.each(data, function (index, empleado) {
+                    var fila = "<tr>" +
+                        "<td>" + empleado.idEmpleado + "</td>" +
+                        "<td>" + empleado.nombres + "</td>" +
+                        "<td>" + empleado.apellidos + "</td>" +
+                        "<td>" + empleado.correo + "</td>" +
+                        "<td>" + empleado.telefono + "</td>" +
+                        "<td>" + empleado.cargoDescripcion + "</td>" +  // Mostrar la descripción del cargo
+                        "<td>" +
+                        "<button class='btn btn-warning btn-sm' onclick='abrirModal(" + empleado.idEmpleado + ")'>Editar</button> " +
+                        "<button class='btn btn-danger btn-sm' onclick='eliminarEmpleado(" + empleado.idEmpleado + ")'>Eliminar</button>" +
+                        "</td>" +
+                        "</tr>";
+
+                    $("#ListaTableEmpleados tbody").append(fila);
+                });
+            },
+            error: function (xhr, status, error) {
+                console.error("Error al obtener la lista de empleados: " + error);
+            }
+        });
+    });
+
+    function abrirModal(idEmpleado) {
+        // Obtener la lista de cargos
+        $.ajax({
+            url: '/Empleado/ObtenerCargos',
+            type: 'GET',
+            success: function (cargos) {
+                // Limpiar el select antes de llenarlo
+                $("#cargo").empty();
+                $("#cargo").append('<option value="">Seleccionar cargo</option>');
+
+                // Llenar el select con los cargos
+                $.each(cargos, function (index, cargo) {
+                    $("#cargo").append('<option value="' + cargo.idCargo + '">' + cargo.descripcion + '</option>');
+                });
+
+                // Si idEmpleado es 0, es un nuevo empleado (crear)
+                if (idEmpleado === 0) {
+                    $("#empleadoModalLabel").text("Crear Empleado");
+                    $("#empleadoForm")[0].reset();  // Resetear el formulario
+                    $("#idEmpleado").val(0);  // Para indicar que es un nuevo empleado
+                } else {
+                    // Llamar al servidor para obtener los detalles del empleado por ID
+                    $.ajax({
+                        url: '/Empleado/Obtener/' + idEmpleado,
+                        type: 'GET',
+                        success: function (empleado) {
+                            $("#empleadoModalLabel").text("Editar Empleado");
+                            $("#idEmpleado").val(empleado.idEmpleado);
+                            $("#nombres").val(empleado.nombres);
+                            $("#apellidos").val(empleado.apellidos);
+                            $("#correo").val(empleado.correo);
+                            $("#telefono").val(empleado.telefono);
+                            $("#cargo").val(empleado.idCargo);
+                        }
+                    });
+                }
+
+                // Mostrar el modal
+                $("#empleadoModal").modal('show');
+            },
+            error: function (xhr, status, error) {
+                console.error("Error al obtener la lista de cargos: " + error);
+            }
+        });
+    }
+
+
+    // Función para guardar el empleado (crear o actualizar)
+    function guardarEmpleado() {
+        var empleado = {
+            IdEmpleado: $("#idEmpleado").val(),
+            Nombres: $("#nombres").val(),
+            Apellidos: $("#apellidos").val(),
+            Correo: $("#correo").val(),
+            Telefono: $("#telefono").val(),
+            IdCargo: $("#cargo").val()
+        };
+
+        $.ajax({
+            url: '/Empleado/Guardar',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(empleado),
+            success: function () {
+                $("#empleadoModal").modal('hide');
+                location.reload();  // Recargar la página para ver los cambios
+            }
+        });
+    }
+
+    // Función para eliminar un empleado
+    function eliminarEmpleado(idEmpleado) {
+        if (confirm("¿Estás seguro de eliminar este empleado?")) {
+            $.ajax({
+                url: '/Empleado/Eliminar/' + idEmpleado,
+                type: 'DELETE',
+                success: function () {
+                    location.reload();  // Recargar la página para ver los cambios
+                }
+            });
+        }
+    }
+
+
+
+
+
+</script>
+

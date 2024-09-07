@@ -1,0 +1,51 @@
+﻿@model List<EXAMCRUDNETCORE.Models.Empleado>
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+
+
+
+<div class="card">
+    <div class="card-header">
+        <H5>Lista de empleados</H5>    
+    </div>
+    <div class="card-body">
+         
+        <a class="btn btn-success btn-sm" asp-action="Empleado_Detalle" asp-controller="Home" asp-route-idEmpleado="0"> Crear Nuevo </a>
+        <hr />
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Nombres</th>
+                    <th scope="col">Apellidos</th>
+                    <th scope="col">Correo</th>
+                    <th scope="col">Telefono</th>
+                    <th scope="col">Cargo</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <th scope="row">@item.Nombres</th>
+                        <td>@item.Apellidos</td>
+                        <td>@item.Correo</td>
+                        <td>@item.Telefono</td>
+                        <td>@item.oCargo.Descripcion</td>
+                        <td>
+                            <a class="btn btn-primary btn-sm" asp-action="Empleado_Detalle" asp-route-idEmpleado="@item.IdEmpleado">Editar</a>
+                            <a class="btn btn-danger btn-sm" asp-action="Eliminar" asp-route-idEmpleado="@item.IdEmpleado">Eliminar</a>
+                        </td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+
+        
+
+    </div>
+</div>
